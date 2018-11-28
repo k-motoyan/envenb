@@ -9,7 +9,7 @@ import (
 )
 
 func TestUsageErr(t *testing.T) {
-	ok, err := Usage(nil)
+	ok, err := Usage("Test", nil)
 
 	if err == nil {
 		t.Fail()
@@ -24,14 +24,14 @@ func TestUsageOK(t *testing.T) {
 	var ok bool
 
 	out := captureStdout(func() {
-		ok, _ = Usage(os.Stdin)
+		ok, _ = Usage("Test", os.Stdin)
 	})
 
 	if !ok {
 		t.Fail()
 	}
 
-	if len(out) == 0 {
+	if out != "Test\n" {
 		t.Fail()
 	}
 }
@@ -42,7 +42,7 @@ func TestUsageNotOK(t *testing.T) {
 
 	f.WriteString("FOO=foo")
 
-	if ok, _ := Usage(f); ok {
+	if ok, _ := Usage("Test", f); ok {
 		t.Fail()
 	}
 
@@ -61,6 +61,26 @@ BAR=bar
 		t.Fail()
 	}
 	if values[1] != "BAR=bar" {
+		t.Fail()
+	}
+}
+
+func TestMapKeyValueText(t *testing.T) {
+	values := MapKeyValueText([]string{"FOO=foo", "BAR=bar"})
+	if values[0] != "\"FOO\":\"foo\"" {
+		t.Fail()
+	}
+	if values[1] != "\"BAR\":\"bar\"" {
+		t.Fail()
+	}
+}
+
+func TestDumpSource(t *testing.T) {
+	out := captureStdout(func() {
+		DumpSource("%v", []string{"A", "B"})
+	})
+
+	if out != "A,B" {
 		t.Fail()
 	}
 }

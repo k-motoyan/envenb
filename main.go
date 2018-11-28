@@ -34,7 +34,7 @@ var usage = `USAGE:
 	go build main.go [output].go`
 
 func main() {
-	ok, err := Usage(os.Stdin)
+	ok, err := Usage(usage, os.Stdin)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -47,10 +47,10 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	DumpSource(MapKeyValueText(values))
+	DumpSource(template, MapKeyValueText(values))
 }
 
-func Usage(f *os.File) (ok bool, err error) {
+func Usage(usage string, f *os.File) (ok bool, err error) {
 	stat, err := f.Stat()
 	if err != nil {
 		return false, err
@@ -103,7 +103,7 @@ func MapKeyValueText(values []string) []string {
 	return mappedValues
 }
 
-func DumpSource(values []string) {
+func DumpSource(template string, values []string) {
 	envValues := strings.Join(values, ",")
 	fmt.Print(fmt.Sprintf(template, envValues))
 }
