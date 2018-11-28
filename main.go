@@ -28,17 +28,42 @@ var _ = func() interface{} {
 }()
 `
 
+var usage = `USAGE:
+	echo FOO=foo\nBAR=bar | envenb > [output].go
+	go build main.go [output].go`
+
 func main() {
-	values, err := readFile(os.Stdin)
+	ok, err := Usage(os.Stdin)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if ok {
+		return
+	}
+
+	values, err := ReadFile(os.Stdin)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	envValues := strings.Join(values, ",")
-	fmt.Print(fmt.Sprintf(template, envValues))
+	DumpSource(MapKeyValueText(values))
 }
 
-func readFile(f *os.File) ([]string, error) {
+func Usage(f *os.File) (ok bool, err error) {
+	stat, err := f.Stat()
+	if err != nil {
+		return false, err
+	}
+
+	if (stat.Mode() & os.ModeCharDevice) != 0 {
+		fmt.Println(usage)
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func ReadFile(f *os.File) ([]string, error) {
 	var values []string
 
 	scanner := bufio.NewScanner(f)
@@ -55,9 +80,6 @@ func readFile(f *os.File) ([]string, error) {
 		if strings.HasPrefix(text, "#") {
 			continue
 		}
-
-		text = strings.Replace(text, "=", "\":\"", 1)
-		values = append(values, "\""+text+"\"")
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -65,4 +87,20 @@ func readFile(f *os.File) ([]string, error) {
 	}
 
 	return values, nil
+}
+
+func MapKeyValueText(values []string) []string {
+	var mappedValues []string
+
+	for _, value := range values {
+		value = strings.Replace(value, "=", "\":\"", 1)
+		mappedValues = append(mappedValues, "\""+value+"\"")
+	}
+
+	return mappedValues
+}
+
+func DumpSource(values []string) {
+	envValues := strings.Join(values, ",")
+	fmt.Print(fmt.Sprintf(template, envValues))
 }
