@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -63,10 +64,10 @@ func Usage(f *os.File) (ok bool, err error) {
 	return false, nil
 }
 
-func ReadFile(f *os.File) ([]string, error) {
+func ReadFile(r io.Reader) ([]string, error) {
 	var values []string
 
-	scanner := bufio.NewScanner(f)
+	scanner := bufio.NewScanner(r)
 
 	for scanner.Scan() {
 		text := scanner.Text()
@@ -80,6 +81,8 @@ func ReadFile(f *os.File) ([]string, error) {
 		if strings.HasPrefix(text, "#") {
 			continue
 		}
+
+		values = append(values, text)
 	}
 
 	if err := scanner.Err(); err != nil {

@@ -38,11 +38,29 @@ func TestUsageOK(t *testing.T) {
 
 func TestUsageNotOK(t *testing.T) {
 	f, _ := ioutil.TempFile("", "test")
-	defer f.Close()
+	defer os.Remove(f.Name())
 
-	f.Write([]byte("FOO=foo"))
+	f.WriteString("FOO=foo")
 
 	if ok, _ := Usage(f); ok {
+		t.Fail()
+	}
+
+	f.Close()
+}
+
+func TestReadFile(t *testing.T) {
+	buffer := bytes.NewBufferString(`
+FOO=foo
+# comment
+BAR=bar
+`)
+
+	values, _ := ReadFile(buffer)
+	if values[0] != "FOO=foo" {
+		t.Fail()
+	}
+	if values[1] != "BAR=bar" {
 		t.Fail()
 	}
 }
